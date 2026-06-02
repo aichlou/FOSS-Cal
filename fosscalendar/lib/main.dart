@@ -105,41 +105,29 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: GestureDetector(
-          onPanUpdate: (details) {
-            setState(() {
-              _offset += details.delta;
-              //debugPrint((sin(_offset.dx / MediaQuery.of(context).size.width * 1.571)).toString());
-            });
-          },
-          child: Transform.translate(
-            offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
-            child: Column(
-              mainAxisAlignment: .center,
-              children: [
-                ...List.generate(
-                  coveredWeeks + 1, (i) => Column(
-                    children: [
-                      Row(
-                        children: [
-                          ...List.generate(
-                            7, (j) => Row(
-                              children: [
-                                dayInMonth(i, j),
-                                if (j < 6) const SizedBox(width: 5,)
-                              ]
-                            )
-                          ),
-                        ],
-                      ),
-                      if (i < coveredWeeks) const SizedBox(height: 5,),
-                    ],
-                  )
-                ),
-                //Text('Lennard'),
-              ],
-            ),
+      body: Transform.translate(
+        offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
+        child: OverflowBox(
+          maxWidth: MediaQuery.of(context).size.width * 3,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              GestureDetector(
+                onPanUpdate: (details) {
+                  setState(() {
+                    _offset += details.delta;
+                  });
+                },
+                child: monthView(coveredWeeks, lastMonth, month),//Transform.translate(
+                //  offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
+                //  child: monthView(coveredWeeks, lastMonth, month),
+                //),
+              ),
+              if (_offset.dx < 0) ...[
+                SizedBox(width: 30,),
+                monthView(coveredWeeks, lastMonth, month),
+              ]
+            ],
           ),
         ),
       ),
@@ -162,7 +150,44 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget dayInMonth (int week, int weekday) {
+  Widget monthView (int coveredWeeks, Duration lastMonth, Duration month) {
+    debugPrint(_offset.dx.toString());
+    return Container(
+      //decoration: BoxDecoration(border: Border.all(color: Colors.red)),
+      child: Column(
+        mainAxisAlignment: .center,
+        children: [
+          ...List.generate(
+            coveredWeeks + 1, (i) => Column(
+              children: [
+                Row(
+                  children: [
+                    calWekInMonth(i),
+                    ...List.generate(
+                      7, (j) => Row(
+                        children: [
+                          dayInMonth(i, j, lastMonth, month, firstDay),
+                          if (j < 6) const SizedBox(width: 5,)
+                        ]
+                      )
+                    ),
+                  ],
+                ),
+                if (i < coveredWeeks) const SizedBox(height: 5,),
+              ],
+            )
+          ),
+          //Text('Lennard'),
+        ],
+      ),
+    );
+  }
+
+  Widget calWekInMonth (int instance) {
+    return Container();
+  }
+
+  Widget dayInMonth (int week, int weekday, Duration lastMonth, Duration month, DateTime firstDay) {
     if (week == 0) {
       String name = weekdays[weekday];
       return Container(
