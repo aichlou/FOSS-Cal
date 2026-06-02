@@ -39,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   Offset _offset = Offset(0, 0);
   bool showDynamicWeeks = false;
+  int calWeeks = 0;
 
   void createEvent() {
 
@@ -93,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint('Wochentag des ersten Tages: ${firstDay.weekday}');
     lastMonth = firstDay.difference(DateTime(selectedTime.year, selectedTime.month - 1)); //ONLY WORKS WHEN LAST MONTH IS IN THE SAME YEAR
     debugPrint('Tage letzten Monat: ${lastMonth.inDays}');
+    calWeeks= (firstDay.difference(DateTime(firstDay.year)).inDays / 7).floor() + 1;
     renderUI();
     super.initState();
   }
@@ -162,7 +164,9 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Row(
                   children: [
-                    calWekInMonth(i),
+                    SizedBox(width: 15),
+                    calWekInMonth(i, calWeeks),
+                    SizedBox(width: 15),
                     ...List.generate(
                       7, (j) => Row(
                         children: [
@@ -183,28 +187,43 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget calWekInMonth (int instance) {
-    return Container();
+  Widget calWekInMonth (int instance, int calWeeks) {
+    if (instance == 0) {
+      return Container(
+        width: MediaQuery.of(context).size.width * 0.02,
+        child: SizedBox(),//Text(''),
+      );
+    }
+    String calWeek = (calWeeks + instance).toString();
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      width: MediaQuery.of(context).size.width * 0.02,
+      height: MediaQuery.of(context).size.height * 0.14,
+      child: Text(calWeek),
+    );
   }
 
   Widget dayInMonth (int week, int weekday, Duration lastMonth, Duration month, DateTime firstDay) {
     if (week == 0) {
       String name = weekdays[weekday];
       return Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.grey,
-            width: 2.0,
-          )
-        ),
+        alignment: .center,
         width: MediaQuery.of(context).size.width * 0.13,
         //height: MediaQuery.of(context).size.height * 0.02,
-        child:  Text(name,
+        child:  Text(
+          name,
           overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          )
         ),
       );
     }
     week = week - 1;
+    bool thisMonth = true;
     int calcDay(int input) {
       int output = input - firstDay.weekday + 2;
       if (output <= 0) {
@@ -212,6 +231,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else if (output > month.inDays) {
         output = output - month.inDays;
+        thisMonth = false;
       }
       return output;
     }//Returns the Day of the current Month with the x-th Day which is shown
@@ -221,6 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ), 
+      alignment: Alignment.topCenter,
       width: MediaQuery.of(context).size.width * 0.13,
       height: MediaQuery.of(context).size.height * 0.14,
       child: Row(
@@ -229,6 +250,10 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('$day',
               overflow: TextOverflow.ellipsis,
               maxLines: 5,
+              textAlign: .center,
+              style: TextStyle(
+                color: thisMonth ? Colors.black: Colors.grey[600],
+              ),
             )
           )
         ],
