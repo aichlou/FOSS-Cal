@@ -40,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Offset _offset = Offset(0, 0);
   bool showDynamicWeeks = false;
   int calWeeks = 0;
+  String? dayLabel = 'All';
 
   void createEvent() {
 
@@ -58,10 +59,47 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Row(
                     children: [
-                      Text('Show only covered Weeks in the Month-View  '),
+                      Flexible(child: Text('Show only covered Weeks in the Month-View  ')),
                       Switch(value: showDynamicWeeks, onChanged: (bool value) {setDialogState(() {showDynamicWeeks = value;});})
                     ],
                   ),
+                  Row(
+                    children: [
+                      Text('Weekday Label Length  '),
+                      Flexible(child:
+                        DropdownMenu<String>(
+                          label: Text('Weekday Label Length'),
+                          initialSelection: dayLabel,
+                          onSelected: (value) {
+                            setDialogState(() => dayLabel = value);
+                          },
+                          dropdownMenuEntries: [
+                            DropdownMenuEntry(
+                              value: '1',
+                              label: '1',
+                            ),
+                            DropdownMenuEntry(
+                              value: '2',
+                              label: '2',
+                            ),
+                            DropdownMenuEntry(
+                              value: '3',
+                              label: '3',
+                            ),
+                            DropdownMenuEntry(
+                              value: '!day',
+                              label: 'Without "day"',
+                            ),
+                            DropdownMenuEntry(
+                              value: 'all',
+                              label: 'All',
+                            )
+                          ],
+                          
+                        )
+                      ),
+                    ],
+                  )
                 ],
               ),
               actions: [
@@ -81,6 +119,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void renderUI() {
+    weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    switch (dayLabel) {
+      case '1': case '2': case '3':
+        weekdays = weekdays.map((e) => e.substring(0, int.parse(dayLabel ?? '0'))).toList();   //['m', 't', 'w', 't', 'f', 's', 's'];
+        break;
+      case '!day':
+        weekdays = weekdays.map((e) => e.substring(0, e.length - 3)).toList();
+        break;
+    }
     setState(() {
       coveredWeeks = showDynamicWeeks ? ((month.inDays.toInt() + firstDay.weekday.toInt() - 1) / 7).ceil() : 6;
     });
@@ -190,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget calWekInMonth (int instance, int calWeeks) {
     if (instance == 0) {
       return Container(
-        width: MediaQuery.of(context).size.width * 0.02,
+        width: 20,//MediaQuery.of(context).size.width * 0.02,
         child: SizedBox(),//Text(''),
       );
     }
@@ -200,7 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(8),
       ),
-      width: MediaQuery.of(context).size.width * 0.02,
+      width: 20,
       height: MediaQuery.of(context).size.height * 0.14,
       child: Text(calWeek),
     );
