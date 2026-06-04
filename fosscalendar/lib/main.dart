@@ -40,7 +40,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Offset _offset = Offset(0, 0);
   bool showDynamicWeeks = false;
   int calWeeks = 0;
-  String? dayLabel = 'All';
+  String? dayLabel = '3';
+  List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  double spaceUnit = 4.0;
 
   void createEvent() {
 
@@ -148,11 +150,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    spaceUnit = ( MediaQuery.of(context).size.width + 1750 ) / 750;
+    debugPrint(spaceUnit.toString());
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Row(
+          children: [
+            Icon(Icons.menu, size: 24),
+            SizedBox(width: 15,), //This should Allign with the Days
+            Text(monthNames[firstDay.month - 1]),
+          ],
+        )
       ),
       body: Transform.translate(
         offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
@@ -173,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 //),
               ),
               if (_offset.dx < 0) ...[
-                SizedBox(width: 30,),
+                SizedBox(width: spaceUnit * 10,),
                 monthView(coveredWeeks, lastMonth, month),
               ]
             ],
@@ -188,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
             tooltip: 'New Event',
             child: const Icon(Icons.add),
           ),
-          SizedBox(height: 5,),
+          SizedBox(height: spaceUnit * 3,),
           FloatingActionButton(
             onPressed: settings,
             tooltip: 'Settings',
@@ -202,42 +212,41 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget monthView (int coveredWeeks, Duration lastMonth, Duration month) {
     debugPrint(_offset.dx.toString());
     return Container(
-      //decoration: BoxDecoration(border: Border.all(color: Colors.red)),
+      height: MediaQuery.of(context).size.height,
       child: Column(
-        mainAxisAlignment: .center,
-        children: [
-          ...List.generate(
-            coveredWeeks + 1, (i) => Column(
+      mainAxisAlignment: .center,
+      children: [
+        ...List.generate(
+          coveredWeeks + 1, (i) => Column(
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(width: 15),
+                    SizedBox(width: spaceUnit * 3),
                     calWekInMonth(i, calWeeks),
-                    SizedBox(width: 15),
+                    SizedBox(width: spaceUnit * 3),
                     ...List.generate(
                       7, (j) => Row(
                         children: [
                           dayInMonth(i, j, lastMonth, month, firstDay),
-                          if (j < 6) const SizedBox(width: 5,)
+                          if (j < 6) SizedBox(width: spaceUnit,)
                         ]
                       )
                     ),
                   ],
                 ),
-                if (i < coveredWeeks) const SizedBox(height: 5,),
+                if (i < 6) SizedBox(height: spaceUnit),
               ],
-            )
-          ),
-          //Text('Lennard'),
-        ],
-      ),
-    );
+            ), 
+        ),
+      ],
+    ),);
   }
 
   Widget calWekInMonth (int instance, int calWeeks) {
     if (instance == 0) {
       return Container(
-        width: 20,//MediaQuery.of(context).size.width * 0.02,
+        width: 8 * spaceUnit,//MediaQuery.of(context).size.width * 0.02,
         child: SizedBox(),//Text(''),
       );
     }
@@ -247,7 +256,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(8),
       ),
-      width: 20,
+      width: 8 * spaceUnit,
       height: MediaQuery.of(context).size.height * 0.14,
       child: Text(calWeek),
     );
