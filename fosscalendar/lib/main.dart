@@ -1,6 +1,7 @@
 // import 'package:flutter/foundation.dart';
 //import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 
@@ -43,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? dayLabel = '3';
   List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   double spaceUnit = 4.0;
+  final PageController _pageController = PageController(initialPage: 1);
 
   void createEvent() {
 
@@ -151,6 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     spaceUnit = ( MediaQuery.of(context).size.width + 1750 ) / 750;
+    debugPrint(MediaQuery.of(context).size.width.toString());
+    debugPrint(MediaQuery.of(context).size.height.toString());
     debugPrint(spaceUnit.toString());
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -164,31 +168,79 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         )
       ),
-      body: Transform.translate(
+      body: /*Transform.translate(
         offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
         child: OverflowBox(
           maxWidth: MediaQuery.of(context).size.width * 3,
+          maxHeight: MediaQuery.of(context).size.height 
+            - AppBar().preferredSize.height 
+            - MediaQuery.of(context).padding.top,
           alignment: Alignment.centerLeft,
-          child: Row(
-            children: [
-              GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _offset += details.delta;
-                  });
-                },
-                child: monthView(coveredWeeks, lastMonth, month),//Transform.translate(
-                //  offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
-                //  child: monthView(coveredWeeks, lastMonth, month),
-                //),
-              ),
-              if (_offset.dx < 0) ...[
-                SizedBox(width: spaceUnit * 10,),
-                monthView(coveredWeeks, lastMonth, month),
-              ]
-            ],
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height 
+              - AppBar().preferredSize.height 
+              - MediaQuery.of(context).padding.top,
+            width: MediaQuery.of(context).size.width * 3,
+            child:Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      _offset += details.delta;
+                    });
+                  },
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,// + (spaceUnit * coveredWeeks),
+                    child: monthView(coveredWeeks, lastMonth, month),
+                  ),//Transform.translate(
+                  //  offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
+                  //  child: monthView(coveredWeeks, lastMonth, month),
+                  //),
+                ),
+                if (_offset.dx < 0) ...[
+                  SizedBox(width: spaceUnit * 10,),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
+                    child: monthView(coveredWeeks, lastMonth, month),
+                  ),
+                ]
+              ],
+            ),
           ),
         ),
+      ), */
+        SafeArea(
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
+            ),
+            child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                if (index == 0) {
+                  // vorheriger Monat
+                  firstDay = DateTime(firstDay.year, firstDay.month - 1, 1);
+                } else if (index == 2) {
+                  // nächster Monat
+                  firstDay = DateTime(firstDay.year, firstDay.month + 1, 1);
+                }
+                // zurück zur mittleren Seite springen
+                _pageController.jumpToPage(1);
+                // coveredWeeks etc. neu berechnen
+              });
+            },
+            children: [
+              Container(),
+              monthView(coveredWeeks, lastMonth, month),
+              Container(),
+            ],
+          ),
+        ), 
       ),
       floatingActionButton: Column(
         mainAxisSize: .min,
@@ -211,45 +263,61 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget monthView (int coveredWeeks, Duration lastMonth, Duration month) {
     debugPrint(_offset.dx.toString());
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      child: Column(
-      mainAxisAlignment: .center,
+    return Column(
+      //mainAxisSize: MainAxisSize.max,
       children: [
-        ...List.generate(
-          coveredWeeks + 1, (i) => Column(
+        Column(
+          children: [
+            Row(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(width: spaceUnit * 3),
-                    calWekInMonth(i, calWeeks),
-                    SizedBox(width: spaceUnit * 3),
-                    ...List.generate(
-                      7, (j) => Row(
-                        children: [
-                          dayInMonth(i, j, lastMonth, month, firstDay),
-                          if (j < 6) SizedBox(width: spaceUnit,)
-                        ]
-                      )
-                    ),
-                  ],
+                SizedBox(
+                  width: 14 * spaceUnit,
                 ),
-                if (i < 6) SizedBox(height: spaceUnit),
+                ...List.generate(
+                  7, (j) => Row(
+                    children: [
+                      weekdayInMonth(j),
+                      if (j < 6) SizedBox(width: spaceUnit,)
+                    ]
+                  )
+                ),
+                SizedBox(height: spaceUnit),
               ],
-            ), 
+            ),
+          ],
         ),
-      ],
-    ),);
+        ...List.generate(
+          coveredWeeks, (i) => Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(width: spaceUnit * 3),
+                        calWekInMonth(i, calWeeks),
+                        SizedBox(width: spaceUnit * 3),
+                        ...List.generate(
+                          7, (j) => Row(
+                            children: [
+                              dayInMonth(i, j, lastMonth, month, firstDay),
+                              SizedBox(width: spaceUnit,)
+                            ]
+                          )
+                        ),
+                      ],
+                    ),
+                  ),
+                SizedBox(height: spaceUnit),
+              ], 
+            ),  
+          ),
+        ), 
+      ], 
+    );
   }
 
   Widget calWekInMonth (int instance, int calWeeks) {
-    if (instance == 0) {
-      return Container(
-        width: 8 * spaceUnit,//MediaQuery.of(context).size.width * 0.02,
-        child: SizedBox(),//Text(''),
-      );
-    }
     String calWeek = (calWeeks + instance).toString();
     return Container(
       decoration: BoxDecoration(
@@ -257,27 +325,28 @@ class _MyHomePageState extends State<MyHomePage> {
         borderRadius: BorderRadius.circular(8),
       ),
       width: 8 * spaceUnit,
-      height: MediaQuery.of(context).size.height * 0.14,
+      height: 30,
       child: Text(calWeek),
     );
   }
 
+  Widget weekdayInMonth(int weekday) {
+    String name = weekdays[weekday];
+    return Container(
+      alignment: .center,
+      width: (MediaQuery.of(context).size.width - 14 * spaceUnit - 8 * spaceUnit) / 7,
+      //height: MediaQuery.of(context).size.height * 0.02,
+      child:  Text(
+        name,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+        )
+      ), 
+    );
+  }
+
   Widget dayInMonth (int week, int weekday, Duration lastMonth, Duration month, DateTime firstDay) {
-    if (week == 0) {
-      String name = weekdays[weekday];
-      return Container(
-        alignment: .center,
-        width: MediaQuery.of(context).size.width * 0.13,
-        //height: MediaQuery.of(context).size.height * 0.02,
-        child:  Text(
-          name,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          )
-        ),
-      );
-    }
     week = week - 1;
     bool thisMonth = true;
     int calcDay(int input) {
@@ -293,16 +362,16 @@ class _MyHomePageState extends State<MyHomePage> {
     }//Returns the Day of the current Month with the x-th Day which is shown
     int day = calcDay(week * 7 + weekday);
     return Container(
-      decoration: BoxDecoration(
+        decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ), 
       alignment: Alignment.topCenter,
-      width: MediaQuery.of(context).size.width * 0.13,
-      height: MediaQuery.of(context).size.height * 0.14,
-      child: Row(
-        children: [
-          Expanded(
+      width: (MediaQuery.of(context).size.width - 14 * spaceUnit - 8 * spaceUnit) / 7,
+      //height: MediaQuery.of(context).size.height * 0.14, 
+      //child: Row(
+        //children: [
+          //Expanded(
             child: Text('$day',
               overflow: TextOverflow.ellipsis,
               maxLines: 5,
@@ -311,9 +380,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: thisMonth ? Colors.black: Colors.grey[600],
               ),
             )
-          )
-        ],
-      ),
+          //)
+        //],
+      //), 
     );
   }
 }
