@@ -4,6 +4,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:fosscalendar/month.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,14 +33,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  DateTime selectedTime = DateTime.now();
-  Duration month = Duration();
-  Duration lastMonth = Duration();
-  int coveredWeeks = 6;
-  DateTime firstDay = DateTime.fromMicrosecondsSinceEpoch(0);
+  late Month selectedMonth;
   List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   bool showDynamicWeeks = false;
-  int calWeeks = 0;
   String? dayLabel = '3';
   List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   double spaceUnit = 4.0;
@@ -139,19 +135,34 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
     }
     setState(() {
-      coveredWeeks = showDynamicWeeks ? ((month.inDays.toInt() + firstDay.weekday.toInt() - 1) / 7).ceil() : 6;
+      //coveredWeeks = showDynamicWeeks ? ((month.inDays.toInt() + firstDay.weekday.toInt() - 1) / 7).ceil() : 6;
     });
   }
 
+
+
   @override
   void initState() {
-    month = DateTime(selectedTime.year, selectedTime.month + 1).difference(DateTime(selectedTime.year, selectedTime.month)); //Funktioniert bei Dezember nicht
-    debugPrint('Tage diesen Monat: ${month.inDays}');
-    firstDay = DateTime(selectedTime.year, selectedTime.month);
-    debugPrint('Wochentag des ersten Tages: ${firstDay.weekday}');
-    lastMonth = firstDay.difference(DateTime(selectedTime.year, selectedTime.month - 1)); //ONLY WORKS WHEN LAST MONTH IS IN THE SAME YEAR
-    debugPrint('Tage letzten Monat: ${lastMonth.inDays}');
-    calWeeks= (firstDay.difference(DateTime(firstDay.year)).inDays / 7).floor() + 1;
+    DateTime now = DateTime.now();
+    selectedMonth = Month(DateTime(now.year, now.month));
+    _pageController.addListener(() {
+      final page = _pageController.page ?? 1;
+      if (page == page.roundToDouble() && page != 1) {
+          DateTime firstDay = selectedMonth.firstDay;
+          if (page.round() == 0) {
+            firstDay = DateTime(firstDay.year, firstDay.month - 1);
+          } else if (page.round() == 2) {
+            firstDay = DateTime(firstDay.year, firstDay.month + 1);
+          }
+           setState(() => selectedMonth = Month(firstDay));
+          debugPrint(page.toString());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(1);
+          }
+        });
+      }
+    });
     renderUI();
     super.initState();
   }
@@ -170,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Icon(Icons.menu, size: 24),
             SizedBox(width: 15,), //This should Allign with the Days
-            Text(monthNames[firstDay.month - 1]),
+            Text(monthNames[selectedMonth.firstDay.month - 1]),
           ],
         )
       ),
@@ -185,20 +196,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             child: PageView(
             controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                if (index == 0) {
-                  firstDay = DateTime(firstDay.year, firstDay.month - 1);
-                } else if (index == 2) {
-                  firstDay = DateTime(firstDay.year, firstDay.month + 1);
-                }
-                _pageController.jumpToPage(1);
-              });
-            },
             children: [
-              Container(),
-              monthView(coveredWeeks, lastMonth, month),
-              Container(),
+              monthView(Month(DateTime(selectedMonth.firstDay.year, selectedMonth.firstDay.month - 1))),
+              monthView(selectedMonth),
+              monthView(Month(DateTime(selectedMonth.firstDay.year, selectedMonth.firstDay.month + 1))),
             ],
           ),
         ), 
@@ -222,7 +223,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget monthView (int coveredWeeks, Duration lastMonth, Duration month) {
+  Widget monthView (Month selectedMonth) {
+    int coveredWeeks = showDynamicWeeks ? selectedMonth.coveredWeeks : 6;
     return Column(
       children: [
         Column(
@@ -254,12 +256,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(width: spaceUnit * 3),
-                        calWekInMonth(i, calWeeks),
+                        calWekInMonth(i, selectedMonth.calWeek),
                         SizedBox(width: spaceUnit * 3),
                         ...List.generate(
                           7, (j) => Row(
                             children: [
-                              dayInMonth(i, j, lastMonth, month, firstDay),
+                              dayInMonth(i, j, selectedMonth),
                               SizedBox(width: spaceUnit,)
                             ]
                           )
@@ -305,7 +307,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget dayInMonth (int week, int weekday, Duration lastMonth, Duration month, DateTime firstDay) {
+  Widget dayInMonth (int week, int weekday, Month selectedMonth) {
+    Duration lastMonth = selectedMonth.lastMonth;
+    Duration month = selectedMonth.month;
+    DateTime firstDay = selectedMonth.firstDay;
     bool thisMonth = true;
     int calcDay(int input) {
       int output = input - firstDay.weekday + 2;
