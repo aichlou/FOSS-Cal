@@ -38,13 +38,13 @@ class _MyHomePageState extends State<MyHomePage> {
   int coveredWeeks = 6;
   DateTime firstDay = DateTime.fromMicrosecondsSinceEpoch(0);
   List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  Offset _offset = Offset(0, 0);
   bool showDynamicWeeks = false;
   int calWeeks = 0;
   String? dayLabel = '3';
   List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   double spaceUnit = 4.0;
   final PageController _pageController = PageController(initialPage: 1);
+  bool greyOutDays = true;
 
   void createEvent() {
 
@@ -65,6 +65,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       Flexible(child: Text('Show only covered Weeks in the Month-View  ')),
                       Switch(value: showDynamicWeeks, onChanged: (bool value) {setDialogState(() {showDynamicWeeks = value;});})
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Flexible(child: Text("Explicitly gray out days that do not belong to the month   ")),
+                      Switch(value: greyOutDays, onChanged: (bool value) {setDialogState(() {greyOutDays = value;});})
                     ],
                   ),
                   Row(
@@ -103,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
               actions: [
@@ -168,48 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         )
       ),
-      body: /*Transform.translate(
-        offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
-        child: OverflowBox(
-          maxWidth: MediaQuery.of(context).size.width * 3,
-          maxHeight: MediaQuery.of(context).size.height 
-            - AppBar().preferredSize.height 
-            - MediaQuery.of(context).padding.top,
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height 
-              - AppBar().preferredSize.height 
-              - MediaQuery.of(context).padding.top,
-            width: MediaQuery.of(context).size.width * 3,
-            child:Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onPanUpdate: (details) {
-                    setState(() {
-                      _offset += details.delta;
-                    });
-                  },
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,// + (spaceUnit * coveredWeeks),
-                    child: monthView(coveredWeeks, lastMonth, month),
-                  ),//Transform.translate(
-                  //  offset: Offset(MediaQuery.of(context).size.width * sin(_offset.dx / MediaQuery.of(context).size.width * 1.571), 0),
-                  //  child: monthView(coveredWeeks, lastMonth, month),
-                  //),
-                ),
-                if (_offset.dx < 0) ...[
-                  SizedBox(width: spaceUnit * 10,),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
-                    child: monthView(coveredWeeks, lastMonth, month),
-                  ),
-                ]
-              ],
-            ),
-          ),
-        ),
-      ), */
+      body:
         SafeArea(
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(
@@ -223,15 +188,11 @@ class _MyHomePageState extends State<MyHomePage> {
             onPageChanged: (index) {
               setState(() {
                 if (index == 0) {
-                  // vorheriger Monat
-                  firstDay = DateTime(firstDay.year, firstDay.month - 1, 1);
+                  firstDay = DateTime(firstDay.year, firstDay.month - 1);
                 } else if (index == 2) {
-                  // nächster Monat
-                  firstDay = DateTime(firstDay.year, firstDay.month + 1, 1);
+                  firstDay = DateTime(firstDay.year, firstDay.month + 1);
                 }
-                // zurück zur mittleren Seite springen
                 _pageController.jumpToPage(1);
-                // coveredWeeks etc. neu berechnen
               });
             },
             children: [
@@ -262,9 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget monthView (int coveredWeeks, Duration lastMonth, Duration month) {
-    debugPrint(_offset.dx.toString());
     return Column(
-      //mainAxisSize: MainAxisSize.max,
       children: [
         Column(
           children: [
@@ -347,12 +306,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget dayInMonth (int week, int weekday, Duration lastMonth, Duration month, DateTime firstDay) {
-    week = week - 1;
     bool thisMonth = true;
     int calcDay(int input) {
       int output = input - firstDay.weekday + 2;
       if (output <= 0) {
         output = lastMonth.inDays + output;
+        thisMonth = false;
       }
       else if (output > month.inDays) {
         output = output - month.inDays;
@@ -363,7 +322,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int day = calcDay(week * 7 + weekday);
     return Container(
         decoration: BoxDecoration(
-        color: Colors.white,
+        color: !thisMonth && greyOutDays ? Colors.grey[100] : Colors.white,
         borderRadius: BorderRadius.circular(8),
       ), 
       alignment: Alignment.topCenter,
