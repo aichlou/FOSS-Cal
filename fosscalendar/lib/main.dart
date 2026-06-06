@@ -3,30 +3,59 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:fosscalendar/config/debug.dart';
+//import 'package:fosscalendar/config/debug.dart';
 import 'dart:math';
 import 'package:fosscalendar/month.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void setTheme(ThemeMode mode) {
+    setState(() => _themeMode = mode);
+  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+      title: 'FOSS Calendar',
+      debugShowCheckedModeBanner: false,
+      theme: //AppThemes.light,
+        ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple
+        ).copyWith(
+          surfaceContainerLow: Colors.grey[100],
+        )
       ),
-      home: const MyHomePage(title: 'FOSS Calendar'),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          brightness: Brightness.dark,
+          seedColor: Colors.purple,
+        ).copyWith(
+          //surfaceContainerLow: Colors.grey[100],
+        ),
+      ),
+      themeMode: _themeMode,
+      home: ColorDebugPage(),//MyHomePage(title: 'FOSS Calendar', setTheme: setTheme),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.setTheme});
   final String title;
+  final void Function(ThemeMode) setTheme;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -34,16 +63,23 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Month selectedMonth;
+  List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   bool showDynamicWeeks = false;
   String? dayLabel = '3';
-  List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   double spaceUnit = 4.0;
   final PageController _pageController = PageController(initialPage: 1);
   bool greyOutDays = true;
+  bool themeMode = false; //False is Dark, True is Light
 
   void createEvent() {
 
+  }
+
+  void changeMode() {
+    themeMode = !themeMode;
+    widget.setTheme(themeMode ? ThemeMode.light : ThemeMode.dark);
+    renderUI();
   }
 
   void settings() {
@@ -174,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint(MediaQuery.of(context).size.height.toString());
     debugPrint(spaceUnit.toString());
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer, //Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Row(
@@ -182,6 +218,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Icon(Icons.menu, size: 24),
             SizedBox(width: 15,), //This should Allign with the Days
             Text(monthNames[selectedMonth.firstDay.month - 1]),
+            Spacer(),
+            IconButton(
+              onPressed: changeMode,
+              icon: themeMode ? Icon(Icons.dark_mode) : Icon(Icons.light_mode),
+            )
           ],
         )
       ),
@@ -281,8 +322,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget calWekInMonth (int instance, int calWeeks) {
     String calWeek = (calWeeks + instance).toString();
     return Container(
+      alignment: Alignment.topCenter,
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest, //Colors.grey[300],
         borderRadius: BorderRadius.circular(8),
       ),
       width: 8 * spaceUnit,
@@ -294,15 +336,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget weekdayInMonth(int weekday) {
     String name = weekdays[weekday];
     return Container(
-      alignment: .center,
+      alignment: Alignment.center,
       width: (MediaQuery.of(context).size.width - 14 * spaceUnit - 8 * spaceUnit) / 7,
-      //height: MediaQuery.of(context).size.height * 0.02,
       child:  Text(
         name,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-        )
+        ),
       ), 
     );
   }
@@ -327,7 +368,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int day = calcDay(week * 7 + weekday);
     return Container(
         decoration: BoxDecoration(
-        color: !thisMonth && greyOutDays ? Colors.grey[100] : Colors.white,
+        color: !thisMonth && greyOutDays ? Theme.of(context).colorScheme.surfaceContainerLow : Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(8),
       ), 
       alignment: Alignment.topCenter,
@@ -341,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage> {
               maxLines: 5,
               textAlign: .center,
               style: TextStyle(
-                color: thisMonth ? Colors.black: Colors.grey[600],
+                color: thisMonth ? Theme.of(context).colorScheme.onSurface: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),//Colors.grey[600],
               ),
             )
           //)
