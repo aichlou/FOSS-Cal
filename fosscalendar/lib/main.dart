@@ -3,10 +3,9 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:fosscalendar/config/debug.dart';
-//import 'package:fosscalendar/config/debug.dart';
 import 'dart:math';
 import 'package:fosscalendar/month.dart';
+import 'package:fosscalendar/swipe.dart';
 
 void main() {
   runApp(MyApp());
@@ -47,7 +46,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       themeMode: _themeMode,
-      home: ColorDebugPage(),//MyHomePage(title: 'FOSS Calendar', setTheme: setTheme),
+      home: MyHomePage(title: 'FOSS Calendar', setTheme: setTheme),
     );
   }
 }
@@ -171,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
     }
     setState(() {
-      //coveredWeeks = showDynamicWeeks ? ((month.inDays.toInt() + firstDay.weekday.toInt() - 1) / 7).ceil() : 6;
     });
   }
 
@@ -184,18 +182,16 @@ class _MyHomePageState extends State<MyHomePage> {
     _pageController.addListener(() {
       final page = _pageController.page ?? 1;
       if (page == page.roundToDouble() && page != 1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           DateTime firstDay = selectedMonth.firstDay;
           if (page.round() == 0) {
             firstDay = DateTime(firstDay.year, firstDay.month - 1);
           } else if (page.round() == 2) {
             firstDay = DateTime(firstDay.year, firstDay.month + 1);
           }
-           setState(() => selectedMonth = Month(firstDay));
+          setState(() => selectedMonth = Month(firstDay));
           debugPrint(page.toString());
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_pageController.hasClients) {
-            _pageController.jumpToPage(1);
-          }
+          _pageController.jumpToPage(1);
         });
       }
     });
@@ -226,16 +222,16 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         )
       ),
-      body:
-        SafeArea(
-          child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-              },
-            ),
-            child: PageView(
+      body: SafeArea(
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+            },
+          ),
+          child: PageView(
+            physics: CalendarScrollPhysics(),
             controller: _pageController,
             children: [
               monthView(Month(DateTime(selectedMonth.firstDay.year, selectedMonth.firstDay.month - 1))),
