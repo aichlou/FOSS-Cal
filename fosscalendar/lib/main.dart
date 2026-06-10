@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:fosscalendar/month.dart';
 import 'package:fosscalendar/swipe.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,27 +27,28 @@ class _MyAppState extends State<MyApp> {
   }
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FOSS Calendar',
-      debugShowCheckedModeBanner: false,
-      theme: //AppThemes.light,
-        ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple
-        ).copyWith(
-          surfaceContainerLow: Colors.grey[100],
-        )
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          brightness: Brightness.dark,
-          seedColor: Colors.purple,
-        ).copyWith(
-          //surfaceContainerLow: Colors.grey[100],
-        ),
-      ),
-      themeMode: _themeMode,
-      home: MyHomePage(title: 'FOSS Calendar', setTheme: setTheme),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? light, ColorScheme? dark) {
+        final ColorScheme lightScheme = light ?? ColorScheme.fromSeed(seedColor: Colors.blue);
+        final ColorScheme darkScheme = dark ?? ColorScheme.fromSeed(seedColor: Colors.blue);
+        return MaterialApp(
+          title: 'FOSS Calendar',
+          debugShowCheckedModeBanner: false,
+          theme: //AppThemes.light,
+            ThemeData(
+            colorScheme: lightScheme.copyWith(
+              surfaceContainerLow: Colors.grey[100],
+            )
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkScheme.copyWith(
+              //surfaceContainerLow: Colors.grey[100],
+            ),
+          ),
+          themeMode: _themeMode,
+          home: MyHomePage(title: 'FOSS Calendar', setTheme: setTheme),
+        );
+      },
     );
   }
 }

@@ -88,7 +88,7 @@ class CalendarScrollPhysics extends ScrollPhysics {
     }
     return ClampingScrollSimulation(
       position: position.pixels,
-      velocity: velocity,
+      velocity: 2 * velocity,
       tolerance: tolerance,
     );
   }
