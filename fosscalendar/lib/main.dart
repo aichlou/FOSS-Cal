@@ -68,6 +68,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day); //TODO Update if new day
   late Month selectedMonth;
   List<String> monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -424,21 +425,29 @@ class _MyHomePageState extends State<MyHomePage> {
       return output;
     }//Returns the Day of the current Month with the x-th Day which is shown
     int day = calcDay(week * 7 + weekday);
+    bool isToday = (today.year == selectedMonth.firstDay.year && today.month == selectedMonth.firstDay.month && today.day == day && thisMonth);
     return Container(
-        decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: !thisMonth && greyOutDays ? Theme.of(context).colorScheme.surfaceContainerLow : Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(8),
-      ), 
+      ),
       padding: EdgeInsets.fromLTRB(spaceUnit / 2, spaceUnit, spaceUnit / 2, spaceUnit),
       alignment: Alignment.topCenter,
       width: (MediaQuery.of(context).size.width - 14 * spaceUnit - 8 * spaceUnit) / 7,
-      child: Text(
-        '$day',
-        overflow: TextOverflow.ellipsis,
-        maxLines: 5,
-        textAlign: .center,
-        style: TextStyle(
-          color: thisMonth ? Theme.of(context).colorScheme.onSurface: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),//Colors.grey[600],
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(3 * spaceUnit),
+          color: isToday ? Theme.of(context).colorScheme.onSurface : null,
+        ),
+        width: 7 * spaceUnit,
+        child: Text(
+          '$day',
+          overflow: TextOverflow.ellipsis,
+          maxLines: 5,
+          textAlign: .center,
+          style: TextStyle(
+            color: thisMonth ? (isToday ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.onSurface) : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),//Colors.grey[600],
+          ),
         ),
       )
     );
