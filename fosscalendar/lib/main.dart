@@ -38,9 +38,9 @@ class _MyAppState extends State<MyApp> {
             ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: seedColorLight
-            ).copyWith(
+            )/*.copyWith(
               surfaceContainerLow: Colors.grey[100],
-            )
+            )*/
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -77,10 +77,6 @@ class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController(initialPage: 1);
   bool greyOutDays = true;
   bool themeMode = false; //False is Dark, True is Light
-
-  void createEvent() {
-
-  }
 
   void changeMode() {
     themeMode = !themeMode;
@@ -180,7 +176,66 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
+  void newEvent() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: true,
+        barrierColor: Colors.transparent,
+        builder: (_) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.3,
+          minChildSize: 0.1,
+          maxChildSize: 1,
+          builder: (context, scrollController) => ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
+            ),
+            child: Column(
+              children: [
+                /*Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ), */
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    physics: ClampingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 50, height: 6,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          ),
+                        ),
+                      ),
+                      Text("Lennards"),
+                      SizedBox(height: 1000),
+                      Text('Easteregg'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   void initState() {
@@ -252,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisSize: .min,
         children: [
           FloatingActionButton(
-            onPressed: createEvent,
+            onPressed: newEvent,
             tooltip: 'New Event',
             child: const Icon(Icons.add),
           ),
@@ -374,23 +429,18 @@ class _MyHomePageState extends State<MyHomePage> {
         color: !thisMonth && greyOutDays ? Theme.of(context).colorScheme.surfaceContainerLow : Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(8),
       ), 
+      padding: EdgeInsets.fromLTRB(spaceUnit / 2, spaceUnit, spaceUnit / 2, spaceUnit),
       alignment: Alignment.topCenter,
       width: (MediaQuery.of(context).size.width - 14 * spaceUnit - 8 * spaceUnit) / 7,
-      //height: MediaQuery.of(context).size.height * 0.14, 
-      //child: Row(
-        //children: [
-          //Expanded(
-            child: Text('$day',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 5,
-              textAlign: .center,
-              style: TextStyle(
-                color: thisMonth ? Theme.of(context).colorScheme.onSurface: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),//Colors.grey[600],
-              ),
-            )
-          //)
-        //],
-      //), 
+      child: Text(
+        '$day',
+        overflow: TextOverflow.ellipsis,
+        maxLines: 5,
+        textAlign: .center,
+        style: TextStyle(
+          color: thisMonth ? Theme.of(context).colorScheme.onSurface: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),//Colors.grey[600],
+        ),
+      )
     );
   }
 }
