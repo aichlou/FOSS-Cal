@@ -29,19 +29,24 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
       builder: (ColorScheme? light, ColorScheme? dark) {
-        final ColorScheme lightScheme = light ?? ColorScheme.fromSeed(seedColor: Colors.blue);
-        final ColorScheme darkScheme = dark ?? ColorScheme.fromSeed(seedColor: Colors.blue);
+        final seedColorLight = light?.primary ?? Colors.blue;
+        final seedColorDark = dark?.primary ??  Colors.blue;
         return MaterialApp(
           title: 'FOSS Calendar',
           debugShowCheckedModeBanner: false,
           theme: //AppThemes.light,
             ThemeData(
-            colorScheme: lightScheme.copyWith(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seedColorLight
+            ).copyWith(
               surfaceContainerLow: Colors.grey[100],
             )
           ),
           darkTheme: ThemeData(
-            colorScheme: darkScheme.copyWith(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seedColorDark,
+              brightness: Brightness.dark,
+            ).copyWith(
               //surfaceContainerLow: Colors.grey[100],
             ),
           ),
